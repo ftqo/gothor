@@ -1,0 +1,12 @@
+logger:
+  level: debug # trace, debug, info, warn, fatal, panic
+  format: console # json, console
+db:
+  user: gothoradmin
+  password: peepeepoopoo
+  host: localhost
+  port: 5432
+  database: gothor
+server:
+  port: 8080
+  baseURL: /

@@ -1,0 +1,252 @@
+openapi: "3.1.0"
+info:
+  title: gothor
+  description: a simple blogging server with a markdown-based backend and customizable frontend rendering.
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /auth/signup:
+    post:
+      summary: Sign up
+      description: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Signup"
+      responses:
+        "201":
+          description: User registered successfully
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: JWT token in HttpOnly, Secure cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/login:
+    post:
+      summary: Log in
+      description: Authenticate a user and return a JWT token in a HttpOnly, Secure cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Login"
+      responses:
+        "200":
+          description: User logged in successfully
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: JWT token in HttpOnly, Secure cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/logout:
+    post:
+      summary: Log out
+      description: Invalidate the user's JWT token
+      responses:
+        "204":
+          description: User logged out successfully
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: JWT token invalidated and removed
+  /posts:
+    get:
+      summary: Get all blog posts
+      description: Retrieve a list of all blog posts in markdown format
+      responses:
+        "200":
+          description: A list of blog posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      summary: Create a new blog post
+      description: Create a new blog post in markdown format
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Post"
+      responses:
+        "201":
+          description: Blog post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+      x-go-middlewares:
+        - authentication
+  /posts/{postId}:
+    get:
+      summary: Get a specific blog post
+      description: Retrieve a specific blog post by ID in markdown format
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: A single blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    put:
+      summary: Update a blog post
+      description: Update a specific blog post by ID in markdown format
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Post"
+      responses:
+        "200":
+          description: Blog post updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+      x-go-middlewares:
+        - authentication
+    delete:
+      summary: Delete a blog post
+      description: Delete a specific blog post by ID
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Blog post deleted successfully
+      x-go-middlewares:
+        - authentication
+components:
+  schemas:
+    Signup:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: The user's email address
+        password:
+          type: string
+          format: password
+          description: The user's password
+        username:
+          type: string
+          description: The user's username
+      required:
+        - email
+        - password
+        - username
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique identifier of the user
+        email:
+          type: string
+          format: email
+          description: The user's email address
+        username:
+          type: string
+          description: The user's username
+      required:
+        - id
+        - email
+        - username
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: The user's email address
+        password:
+          type: string
+          format: password
+          description: The user's password
+      required:
+        - email
+        - password
+    Logout:
+      type: object
+      properties:
+        token:
+          type: string
+          description: The access token to be invalidated
+      required:
+        - token
+    Token:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: The access token for the user
+        tokenType:
+          type: string
+          description: The type of the access token, e.g. Bearer
+        expiresIn:
+          type: integer
+          description: The number of seconds the token is valid for
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique identifier of the blog post
+        title:
+          type: string
+          description: The title of the blog post
+        content:
+          type: string
+          description: The content of the blog post in markdown format
+        createdAt:
+          type: string
+          format: date-time
+          description: The date and time the blog post was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: The date and time the blog post was last updated
+      required:
+        - id
+        - title
+        - content
+        - createdAt
+        - updatedAt
